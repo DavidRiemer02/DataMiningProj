@@ -2,6 +2,17 @@
 \usepackage{graphicx}
 \usepackage{listings}
 \usepackage{color}
+\usepackage{url}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    filecolor=black,      
+    urlcolor=cyan,
+    pdftitle={Overleaf Example},
+    pdfpagemode=FullScreen,
+    }
+\usepackage[nottoc,numbib]{tocbibind}
 
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
@@ -23,10 +34,12 @@
   breakatwhitespace=true,
   tabsize=3
 }
+
+
 \graphicspath{ {./images/} }
 \title{Sentiment Analysis of Tweets using multiple Algorithms \\[0.5em] \large{Project Report for "Data Mining" \\[0.5em]} }
 
-\author{Olivia Saukonoja, David Riemer}
+\author{David Riemer, Olivia Saukonoja}
 
 \date{December 2023}
 
@@ -39,22 +52,24 @@
 \newpage
 \begin{abstract}
 In this Project Report we will explain in detail the process of our Python Project, in which we use multiple algorithms discussed in class to find relationships between words used in tweets. The Dataset provided by the kaggle competition "Twitter sentiment analysis" includes 100000 tweets as Training Data, with their given Sentiment. 1 as a representation for a positive tweet and 0 for a negative one.
-The project utilizes various algorithms, including k-means clustering, Hashing, Dimension Reduction by Singular Vector Decomposition, and A-priori. By applying these algorithms, we aim to gain insights into patterns and connections within the datasets' content. 
+This project utilizes various algorithms, including k-means clustering, Hashing, Dimension Reduction by Singular Vector Decomposition, and A-priori. By applying these algorithms, we aim to gain insights into patterns and connections within the datasets' content. 
 This analysis will contribute to a better understanding of the relationships between words and their context in the realm of social media data. 
 Throughout this report, we will delve into the methodology, results, and implications of the algorithms, highlighting the steps necessary for a successful interpretation of the results and also which obstacles had to be overcome on the way but also what room for improvement is available.
 In the end we will build a Logistic Regression-model in order to classify other tweets to their respective Sentiment value and give a conclusion about our Project.
 \end{abstract}
+\newpage
 \tableofcontents
 \newpage
 \section{Introduction}
 The importance of Natural Language Processing (NLP) has grown significantly due to the overabundance of data on the internet. With the vast amount of text-based information available online, it has become increasingly challenging for humans to manually process and extract meaningful insights from this data. NLP techniques, such as text classification, sentiment analysis, and named entity recognition, enable us to automate the analysis and understanding of large volumes of text data. 
 One of the motivations of our project is the fact, that tweets provide a short form of information singlehandedly, however in bulk they reveal hidden trends and connections between various users. 
 In the first section of this report we will explain the methods used in our data mining process, which include Word2Vec, Dimension Reduction, k-means Clustering, A-priori as well as Logistic Regression, in order to build a solid fundation of knowledge, for the purpose of comprehending the following chapters better. This is also the section where we describe the given data. After that, we will present the results from our algorithms to provide more detailed information about the outcome of our project.
+In the context of our projext our main source of information was the book \emph{Mining of massive data sets} written by Anand Rajaraman, Jure Leskovec, and Jeffrey D. Ullman \cite{leskovec2020mining}.
 \section{Methods}
 \subsection{Architecture and Environment}
 For our project enviroment we opted to use Visual Studio Code 1.84 on Windows 11. In order to be able to work better with our large dataset we decided to include Pyspark, which ran locally on my RazerBook 13. On top of that for some of the visualization we also used Knime with its respective JavaScript extension.
 \subsection{The data}
-The dataset utilized for this project can be accessed via. 
+The dataset utilized for this project can be accessed on \href{https://www.kaggle.com/competitions/twitter-sentiment-analysis2}{this Kaggle competition} 
 It consists of a CSV file with the following columns:
 \begin{itemize}
 \item ItemID: This column serves as the primary key, assigning a unique number to each tweet.
@@ -74,12 +89,12 @@ The first step of our the pipeline is tokenization, which is the process of spli
 To run these steps sequentially and have them contained in one object, we created a variable called pipeline. It includes all the steps mentioned above. This also makes it easier to rerun the pipeline if necessary. As mentioned in the introduction, our goal is to gain an overview of the extensive dataset provided.We want to create a Logistic Regression Model that can predict the sentiment of a tweet with at least 70\% accuracy. Additionally, we would like to understand the relationships between words used in tweets, such as identifying the words most likely used in the context of a tweet that also contains the word "happy."
 \includegraphics[scale = 0.5]{pipeline}
 \subsection{Clustering the data with the help of Word2Vec}
-In order to get to a point of clustring the words in a way that makes sense, we decided to train a Word2Vec model. Word 2Vec is a standard method of generating word embeddings: This is a process of each word being mapped to an vector in a high dimensional space. By mapping words to continuous vector representations, word embeddings enable NLP models to understand the similarity, analogy, and relatedness between different words. we decided on our vector to be of the dimension 2000.  
+In order to get to a point of clustring the words in a way that makes sense, we decided to train a Word2Vec model. Word 2Vec is a standard method of generating word embeddings: This is a process of each word being mapped to an vector in a high dimensional space. By mapping words to continuous vector representations, word embeddings enable NLP models to understand the similarity, analogy, and relatedness between different words\cite{cluster}\cite{gensimword2vec}. We decided on our vector to be of the dimension 2000.  
 \begin{lstlisting}
 w2vModel = Word2Vec(sentences=sentences, vector_size=2000, workers=1, seed=1337)
 w2vModel.save("word2vec.model")
 \end{lstlisting}
-After creating the model, we then we then used it to find out, which words are most often used with the most common emotions exressed in tweets:
+After creating the model, we then used it to find out which words are most often used with the most common emotions expressed in tweets:
 \begin{lstlisting}
 listHappy=w2vModel.wv.most_similar("happy")
 listsad=w2vModel.wv.most_similar("sad")
@@ -97,7 +112,7 @@ After generating the 2000-dimensional vector representation for each word, the n
 from scipy.linalg import svd
 from numpy import zeros, diag
 \end{lstlisting}
-We also just want to look at the 750 "most important" words in our dataset so we end up with a \(750 \times 2000\) matrix, in which each row is a representation of one word and the columns represent one of the features of the word. After creating our \(U, \sigma,~and~V^T \) matrices and reducing the dimensions to only 2 by selecting only the two largest singular values and their corresponding singular vectors from these 3 matrices and multiplying them together.
+We also just want to look at the 750 "most important" words in our dataset so we end up with a \(750 \times 2000\) matrix, in which each row is a representation of one word and the columns represent one of the features of the word. After creating our \(U, \sigma,~and~V^T \) matrices and reducing the dimensions to only 2 by selecting only the two largest singular values and their corresponding singular vectors from these 3 matrices and multiplying them together, we create a new Matrix B. \cite{banerjee2014linear}
 \begin{lstlisting}
 U, s, VT = svd(vectors750, full_matrices=False)
 Sigma = zeros((vectors750.shape[0], vectors750.shape[1]))
@@ -109,22 +124,23 @@ VT = VT[:n_elements, :]
 B = U.dot(Sigma.dot(VT))
 \end{lstlisting}
 \subsubsection{Using k-means to cluster the data and visualize}
-Now we can plot the data in a 2-dimensional space in which words most often used together are close to one another in the euclidean space. We use the k-means package provided by sklearn.cluster and devide the points in 20 cluster and also end up plotting the respective centroid of each cluster to visualize the data better. In the result one can see that for example, words that describe days in a week points in time belong to a cluster, but also words that are apart of positive emotions. There is a lot of noise towards the middle of the figure, which is due to the fact that a lot of words can be used in a variety of contexts.
+Now we can plot the data in a 2-dimensional space in which words most often used together are close to one another in the euclidean space. We use the k-means package provided by sklearn.cluster and devide the points in 20 cluster and also end up plotting the respective centroid of each cluster to visualize the data better. In the result,we observed that words describing days of the week and points in time belong to one cluster, as well as words associated with positive emotions. However, there is a lot of noise in the middle of the figure, mainly because many words can be used in various contexts.
 \begin{figure}[htp]
 \centering
 \includegraphics[width=.3\textwidth]{kmeanspositive}\hfill
 \includegraphics[width=.3\textwidth]{kmeansnegative}\hfill
 \includegraphics[width=.3\textwidth]{kmeansdates}
-\caption{On the left: positive emotions(wow, cool, cute, funny) \\ Middle: negative emotions(jealous, sad, worse, cannot)\\ Right: Timestamps with used in the context of sleep (bed, night, slep, tomorrow) }
+\caption{On the left: positive emotions(wow, cool, cute, funny) \\ Middle: negative emotions(jealous, sad, worse, cannot)\\ Right: Timestamps used in the context of sleep (bed, night, slep, tomorrow)}
 \label{fig:kmeansresult}
 \end{figure}
 \subsection{A-priori to find words most often used together}
-Next, we used to use a simple implementation of the apriori-algorithmin order to also find words often used together. This time only the number of occurences together in a tweet is examined. We also divided our preprocessed dataset into two separate dataframes. One dataframe includes only positive tweets, while the other includes only negative tweets.
+Next, we used a simple implementation of the Apriori algorithm in order to find words that are often used together. This time only the number of occurences of a word in a tweet is examined. We chose the support threshold to be 0.002 and our minimum confidence to be 0.1.
+We also divided our preprocessed dataset into two separate dataframes. One dataframe includes only positive tweets, while the other includes only negative tweets.
 The top 5 most frequently used words in positive tweets were "good," "thanks," "love," "lol," and "like." In negative tweets, the most common words were "get," "like," "know," "sorry," and "go." The most frequently occurring tuple in positive tweets was [morning, good], and in negative tweets, it was [could, wish].
 \subsection{Logistic Regression Model}
 In the final step of our project, we developed a Logistic Regression Model to classify tweets based on their sentiment.
 To begin, we randomly divided the data into 80\% training data and 20\% test data. When creating the Logistic Regression Model, we set a maximum of 1000 iterations to ensure convergence even if the gradient descent steps become "stuck". Additionally, we included a regularization parameter to prevent overfitting on the training data.
-As for the features used to train the model, we utilized the features from the hashingTF in our initial pipeline.
+Regarding the features used to train the model, we employed the features from the hashingTF in our initial pipeline.
 \newpage
 \begin{lstlisting}
 Split training and Testing
@@ -139,9 +155,18 @@ print("Done")
 \end{lstlisting}
 
 \section{Results and Conclusion}
-%In conclusion, this project focused on the application of Natural Language Processing (NLP) techniques, specifically word embeddings and Singular Value Decomposition (SVD), to analyze and understand text data. By leveraging NLP, we were able to create a Logistic Regression Model for sentiment analysis of tweets, achieving an accuracy of at least 70\%. Word embedding allowed us to represent words as numerical vectors in a high-dimensional space, capturing the semantic relationships and meanings between words. We applied SVD to reduce the dimensionality of the word vectors while preserving the semantic relationships, enabling us to visualize the word embeddings in a 2-dimensional space. Through this visualization, we observed that words most often used together were closer to each other in the Euclidean space, indicating their semantic similarity and contextual usage. Furthermore, we used the k-means clustering algorithm to group the data points (words) into 20 clusters, allowing us to identify patterns and relationships between words.
-
-\section{References}
+In this project, we aimed to find relationships between words used in 100,000 tweets. The used algorithms Word2Vec, Dimension Reduction, k-means clustering, A-priori and Logistic Regression were able to find different kinds of relationships between words.
+First, data was clustered using Word2Vec model to vectors in a 2000-dimensional space. Then the model was used to find out words in the context of common emotions, generally expressed in tweets. These emotions were “happy”, “sad”, “good” and “bad”, and the words with similar context were represented in a table that includes one column for each emotion.
+After that, Dimension Reduction by Singular Vector Decomposition was applied to these vectors. This resulted the data points being plotted on a 2-dimensional space to a 750 x 2000 matrix. The rows of the matrix were representations of words, and the columns were the features of the word. We applied SVD to reduce the dimensionality of the word vectors while preserving the semantic relationships, enabling us to visualize the word embeddings in a 2-dimensional space.
+Then k-means was used to cluster the data into 20 clusters based on which words are most often used together. The centroids of each cluster were also plotted to visualize the data. Through this visualization, we observed that words most often used together were closer to each other in the Euclidean space, indicating their semantic similarity and contextual usage.
+Next, A-priori algorithm was used to find words that often occur together. The positive and negative tweets were analyzed separately. The result of this was that five most frequently used words in positive tweets were “good”, “thanks”, “love”, “lol” and “like”. In negative tweets, the most common words were “get”, “like”, “know”, “sorry”, and “go”. 
+The most common tuple in positive tweets was [morning, good] and in negative tweets [could, wish]. 
+Finally, Logistic Regression Model was used to classify the tweets based on their sentiment in 1000 iterations. Our goal was to create a model of 70\% acuraccy, which we succeded in achieving.
+In conclusion, the algorithms were applicable to mining information from tweets. They were also able to successfully find different kinds of patterns. Finally, they were able to reveal connections between words and extract meaningful information from the data.
+\subsection{Further improvements}
+Although these observations initially seem logical, our results still present conflicting findings. For instance, it seems contradictory that the word "good" is one of the most frequently used words in negative tweets as well. This discrepancy could be attributed to various factors: First of all it is difficult to cleanse all the tweets of both sentiments to just their important words. We tried our best to remove stopwords, but some words can be used in a rich amount of contexts, particularly in both sentiments. We made an effort to remove stop words, adding custom ones as well, but some words can be used in various contexts, especially in both positive and negative sentiments. In future studies, we believe that implementing more advanced preprocessing techniques could yield improved results, not only in classification but also in generating more intuitive visualizations on the graph. Another way to improve classification could be by implementing a third "neutral" sentiment. Negative tweets would have a sentiment of -1, neutral tweets would have a sentiment of 0, and positive tweets would have a sentiment of 1\cite{twitter-sentiment-analysis2}. This approach could help in removing some of the ambiguities in words, as identified in our apriori analysis.
+\bibliographystyle{unsrt}
+\bibliography{bibtex}
 
 
 
